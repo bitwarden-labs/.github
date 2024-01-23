@@ -5,7 +5,7 @@ What We Do
 
 In Bitwarden Labs, we focus on a diverse range of projects, including but not limited to:
 
-- **Deployment Scripts & Strategies**: Streamlining the process of deploying Bitwarden in different environments.
+- **Deployment Scripts & Strategies**: Streamlining the process of deploying Bitwarden self-hosted server in different environments (including your homelab).
 - **Experimental Wrappers for Bitwarden CLI**: Enhancing the command line experience with innovative wrappers.
 - **Importation Scripts for Other Password Managers**: Making the transition to Bitwarden smoother with efficient importation tools.
 - **Log Analyzers**: Tools to delve deep into logs for insights and troubleshooting.
