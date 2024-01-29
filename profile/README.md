@@ -1,7 +1,8 @@
 # :zap: Bitwarden Labs
 
 Welcome to Bitwarden Labs, an unofficial space for innovative and experimental tools related to the Bitwarden universe. Here, we explore and develop a variety of projects with the help of our vibrant community.
-What We Do
+
+## What We Do
 
 In Bitwarden Labs, we focus on a diverse range of projects, including but not limited to:
 
