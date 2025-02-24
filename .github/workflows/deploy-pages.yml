@@ -1,42 +1,69 @@
-name: Deploy GitHub Pages
+name: Update README and Deploy to GitHub Pages
 
 on:
+  schedule:
+    - cron: "0 0 * * *"  # Runs daily at midnight UTC
   push:
     branches:
       - main  # Adjust if needed
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual execution
+
+permissions:
+  contents: write  # Needed for committing to the repo
+  pages: write     # Needed for GitHub Pages deployment
+  id-token: write  # Needed for OIDC authentication
 
 jobs:
-  build:
+  update-readme:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Generate Repository List
+      - name: Install Dependencies
         run: |
-          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-               -H "Accept: application/vnd.github.v3+json" \
-               "https://api.github.com/orgs/bitwarden-labs/repos?per_page=100" | jq -r '.[] | "- [\(.name)](\(.html_url)) - \(.description // "No description")"' > repo-list.md
+          sudo apt update
+          sudo apt install jq -y
 
+      - name: Fetch Organization Repositories
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -s -H "Authorization: token $GITHUB_TOKEN" \
+               -H "Accept: application/vnd.github.v3+json" \
+               "https://api.github.com/orgs/bitwarden-labs/repos?per_page=100" | jq > repos.json
+
+      - name: Generate README.md
+        run: |
           echo "# Bitwarden Labs Projects" > README.md
           echo "" >> README.md
           echo "## Repositories" >> README.md
           echo "" >> README.md
-          cat repo-list.md >> README.md
-          cat README.md  # Show content in logs
+
+          cat repos.json | jq -r '.[] | "- [\(.name)](\(.html_url)) - \(.description // "No description available")"' >> README.md
+          
+          cat README.md  # Print the updated README to logs
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update README with latest repositories" || echo "No changes to commit"
+          git push origin main || echo "No changes to push"
+
+  deploy:
+    needs: update-readme
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Upload GitHub Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
