@@ -1,0 +1,42 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Adjust if needed
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate Repository List
+        run: |
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               "https://api.github.com/orgs/bitwarden-labs/repos?per_page=100" | jq -r '.[] | "- [\(.name)](\(.html_url)) - \(.description // "No description")"' > repo-list.md
+
+          echo "# Bitwarden Labs Projects" > README.md
+          echo "" >> README.md
+          echo "## Repositories" >> README.md
+          echo "" >> README.md
+          cat repo-list.md >> README.md
+          cat README.md  # Show content in logs
+
+      - name: Upload GitHub Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
